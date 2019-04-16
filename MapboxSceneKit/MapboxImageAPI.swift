@@ -113,7 +113,9 @@ public final class MapboxImageAPI: NSObject {
 
         let group = DispatchGroup()
         let groupID = UUID()
-        pendingFetches[groupID] = [UUID]()
+        pendingFetchesDispatchQueue.sync(flags: .barrier) { [weak self] in
+            pendingFetches[groupID] = [UUID]()
+        }
 
         var completed: Int = 0
         let total = bounding.xs.count * bounding.ys.count
@@ -196,7 +198,9 @@ public final class MapboxImageAPI: NSObject {
 
         let group = DispatchGroup()
         let groupID = UUID()
-        pendingFetches[groupID] = [UUID]()
+        pendingFetchesDispatchQueue.sync(flags: .barrier) { [weak self] in
+            self?.pendingFetches[groupID] = [UUID]()
+        }
 
         var completed: Int = 0
         let total = bounding.xs.count * bounding.ys.count
@@ -254,7 +258,9 @@ public final class MapboxImageAPI: NSObject {
         for task in tasks {
             httpAPI.cancelRequestWithID(task)
         }
-        pendingFetches.removeValue(forKey: groupID)
+        _ = pendingFetchesDispatchQueue.sync(flags: .barrier) { [weak self] in
+            self?.pendingFetches.removeValue(forKey: groupID)
+        }
     }
 
     //MARK: - Helpers
